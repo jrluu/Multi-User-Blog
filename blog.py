@@ -109,8 +109,8 @@ class InvalidCookiePage(Handler):
 class PostPage(Handler):
     def render_front(self, username = "", password = ""):
 
-#        if not self.check_cookie():
-#            self.redirect('/invalidCookie')
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
 
         post_query = Post.query().order(-Post.created).fetch(10)
         self.render("post.html", post_query = post_query, username = username, password = password)
