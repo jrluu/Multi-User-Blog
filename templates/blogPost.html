@@ -4,12 +4,15 @@
 
   <h1> Specific Blog Post</h1>
 
-  <h2> {{blog_query.title}} </h2>
-  <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
-  <p>
-    {{blog_query.content}}
-  </p>
-  <br>
-  <p>{{blog_query.likes}}</p>
+  <h2> {{not_found}}</h2>
 
+  {%if blog_query%}
+    <h2> {{blog_query.title}} </h2>
+    <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
+    <p>
+      {{blog_query.content}}
+    </p>
+    <br>
+    <p>{{blog_query.likes}}</p>
+  {% endif %}
 {% endblock %}

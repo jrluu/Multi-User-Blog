@@ -26,13 +26,17 @@
   <hr>
 
   {% for post in post_query %}
-    <h2> {{post.title}} </h2>
-    <h3> {{post.author}} Date: {{post.created}}</h3>
-    <p>
-      {{post.content}}
-    </p>
-    <br>
-    <p>{{post.likes}}</p>
+  {# {}{ [blogpost?blog_post_id=, post.key.id] | join }} #}
+
+  <a href="blogPost?blog_post_id={{post.key.id()}}"> {{post.title}} </a>
+  <h3> {{post.author}} Date: {{post.created}}</h3>
+  <p>
+    {{post.content}}
+  </p>
+  <br>
+  <p>{{post.likes}}</p>
+
+
   {% endfor %}
 
 {% endblock %}

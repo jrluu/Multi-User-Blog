@@ -109,8 +109,8 @@ class InvalidCookiePage(Handler):
 class PostPage(Handler):
     def render_front(self, username = "", password = ""):
 
-        if not self.check_cookie():
-            self.redirect('/invalidCookie')
+#        if not self.check_cookie():
+#            self.redirect('/invalidCookie')
 
         post_query = Post.query().order(-Post.created).fetch(10)
         self.render("post.html", post_query = post_query, username = username, password = password)
@@ -226,21 +226,27 @@ class WelcomePage(Handler):
 class BlogPostPage(Handler):
 
     def render_front(self, blog_query = ""):
-        self.render("blogPost.html", blog_query = blog_query)
+        self.render("blogPost.html", blog_query = blog_query, not_found ="")
 
+    def render_not_found(self):
+        self.render("blogPost.html", not_found = "Sorry, post not found!")
 
     def get(self):
         blog_post_id = self.request.get('blog_post_id', default_post_id)
 
-        blog_query = Post.get_by_id(blog_post_id)
-        self.render_front(blog_query)
+        #Must turn blog_post_id into an int because header gives a string
+        blog_query = Post.get_by_id(int(blog_post_id))
+        if blog_query:
+            self.render_front(blog_query)
+        else:
+            self.render_not_found()
 
-
+'''
     def post(self):
-        blog_post_id = self.request.get('blog_post_id)
+        blog_post_id = self.request.get('blog_post_id', default_post_id)
         query_params = {'blog_post_id': blog_post_id}
         self.redirect('/?' + urllib.urlencode(query_params))
-
+'''
 #    def
 
 app = webapp2.WSGIApplication([('/', PostPage),
