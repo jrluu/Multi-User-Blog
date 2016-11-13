@@ -3,12 +3,31 @@ import webapp2
 import jinja2
 import hashlib
 import hmac
+import time
 
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
+
+
+
+SECRET = "SamSmith"
+def hash_str(s):
+    return hmac.new(SECRET,s).hexdigest()
+
+#Takes in some value, and returns "value,hash"
+def make_secure_val(s):
+    return "%s|%s" %(s, hash_str(s))
+
+#Takes in a string of format "value,hash"
+#Return value if true
+def check_secure_val(h):
+    val = h.split(',')[0]
+    if hmac.compare_digest(h, make_secure_val(val)):
+        return val
+
 
 
 #IDK IF WE WILL NEED THIS
@@ -27,6 +46,7 @@ def post_key(post_id = 'default_post_id'):
     """
     return ndb.Key('Posts', post_id)
 
+
 #Won't be dynamic, so no ndb.Expando class
 class Account(ndb.Model):
     #user = ndb.StringProperty(required = True)
@@ -36,42 +56,13 @@ class Account(ndb.Model):
 
 
 class Post(ndb.Model):
-    author = ndb.StringProperty()
+    author = ndb.StringProperty(required= True)
     title = ndb.StringProperty(required = True)
     content = ndb.TextProperty(required = True)
     created = ndb.DateTimeProperty(auto_now_add = True)
     likes = ndb.IntegerProperty(default = 0)
     #Parent = ndb. StructuredProperty()
-    '''Need a list of children post'''
     #Child =  ndb. StructuredProperty(repeated = True)
-
-
-SECRET = "asdf"
-def hash_str(s):
-    return hmac.new(SECRET,s).hexdigest()
-
-#Takes in some value, and returns "value,hash"
-def make_secure_val(s):
-    return "%s|%s" %(s, hash_str(s))
-
-#Takes in a string of format "value,hash"
-#Return value if true
-def check_secure_val(h):
-    val = h.split(',')[0]
-    if hmac.compare_digest(h, make_secure_val(val)):
-        return val
-
-
-#Takes in a string of format "username,password,verifypw,email"
-#Return value if true
-#def check_secure_val(var_list_str):
-#    val_list = h.split('|')
-#    num_of_var = len(val_list)
-
-#    if num_of_var > 2:
-#        password = val_list[1]
-#        if hmac.compare_digest(password, ):
-#            return val
 
 
 class Handler(webapp2.RequestHandler):
@@ -85,48 +76,72 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template,**kw))
 
-    #Cookie should be info=username|password
-    #Cookie stuff
     def set_secure_cookie(self, name, val):
         self.response.headers['Content-Type'] = 'text/html'
-        cookie_val = str(make_secure_val(val))
-#        cookie_val = str(cookie_val)
-#        self.response.headers.add_header('Set-Cookie', 'username = %s,password = %s' % (name, cookie_val))
+        cookie_val = str(hash_str(val))
         self.response.headers.add_header('Set-Cookie', 'username = %s' % str(name))
         self.response.headers.add_header('Set-Cookie', 'password = %s' % cookie_val)
-    ##Add function that checks if the user is logged in or not
 
-#    def verify_cookie(self):
-        ###Check cookie against DB
+    def check_cookie(self):
+        username = self.request.cookies.get("username")
+        password = self.request.cookies.get("password")
+
+        if username:
+            account_query = Account.get_by_id(username)
+            if account_query:
+                if account_query.password:
+                    if account_query.password == password:
+                        return True
+
+        return False
+
+    def clear_cooke(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.headers.add_header('Set-Cookie', "username = ")
+        self.response.headers.add_header('Set-Cookie', "password = ")
+
+
+class InvalidCookiePage(Handler):
+    def get(self):
+        self.render("invalidCookie.html")
+
+
+class PostPage(Handler):
+    def render_front(self, username = "", password = ""):
+
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        post_query = Post.query().order(-Post.created).fetch(10)
+        self.render("post.html", post_query = post_query, username = username, password = password)
+
+    def get(self):
+        self.render_front()
+
+    def post(self):
+
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        username = self.request.cookies.get("username")
+        title = self.request.get("title")
+        content = self.request.get("content")
+
+        post_key = Post(author = username, title = title, content = content)
+        post_key.put()
+
+        self.render_front()
 
 
 class SignUpPage(Handler):
 
     def render_front(self, username = "", password = "", verifypw = "", email = "", errorUser = "", errorPass=""):
-        self.render("sign_up.html", username = username, password = password, verifypw = verifypw, email = email, errorUser = errorUser, errorPass= errorPass)
+        self.render("sign_up.html", username = username, password = password,
+                    verifypw = verifypw, email = email, errorUser = errorUser,
+                    errorPass= errorPass)
 
     def get(self):
-#        self.set_secure_cookie("Bob_smith", "password_val")
-#        cookie_str = self.request.cookies.get("password")
-#        self.write(cookie_str)
-
-
-#        query = Account.get_by_id("Bob")
-
-#        if cookie_str:
-#            list_val = cookie_str.split('|')
-#            if (len(list_val) == 2):
-#                self.write("There are two items here")
-        #        name =
-            #See amount
-            #if there is two
-                #name = grabName(list_val[0])
-                #if name:
-                    #if list_val[1] == grabPw(name)
-                        #go to welcome
-
         self.render_front()
-
 
     def post(self):
 
@@ -141,7 +156,6 @@ class SignUpPage(Handler):
         if username and password and verifypw:
 
             account_query = Account.get_by_id(username)
-            email_query = Account.query()
 
             if account_query:
                 errorUser = "Username Taken"
@@ -150,6 +164,8 @@ class SignUpPage(Handler):
                 errorPass = "Passwords do not match"
                 redirect = True
         else:
+            #Taken care of this case with required html form
+            #but leaving as redundancy
             redirect = True
             errorUser = "Please fill out username and password fields"
             errorPass = ""
@@ -157,18 +173,83 @@ class SignUpPage(Handler):
         if redirect:
             self.render_front(username, password, verifypw, email, errorUser, errorPass)
         else:
-#            password = hash_str(password)
-            #Create a fake user account
             user= Account(id = username, password=hash_str(password), email = email)
             user.put()
-            #Create Cookie
-#            password = make_secure_val(password)
-#            self.write("This is username: %s and password: %s" % (username, password))
             self.set_secure_cookie(username, password)
+            self.redirect('/welcome')
 
-        #Erase this later
-        self.render_front(username, password, verifypw, email, errorUser, errorPass)
 
-app = webapp2.WSGIApplication([('/', SignUpPage),
+class LoginPage(Handler):
+
+    def render_front(self, username="", password="", error=""):
+        self.render("login.html", username = username, password = password, error=error)
+
+    def get(self):
+        self.render_front()
+
+    def post(self):
+        username = self.request.get("username")
+        password = self.request.get("password")
+
+        if username and password:
+            account_query = Account.get_by_id(username)
+
+            if account_query:
+                if account_query.password:
+                    if account_query.password == hash_str(password):
+                        self.set_secure_cookie(username,password)
+                        self.redirect('/welcome')
+
+        self.render_front(username, password, "Invalid Username or Password")
+
+
+class LogoutPage(Handler):
+    def get(self):
+        self.clear_cooke()
+        self.redirect('signup')
+
+
+class WelcomePage(Handler):
+
+    def render_front(self):
+
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        username = self.request.cookies.get("username")
+        self.render("welcome.html", username=username)
+
+    def get(self):
+        self.render_front()
+
+
+class BlogPostPage(Handler):
+
+    def render_front(self, blog_query = ""):
+        self.render("blogPost.html", blog_query = blog_query)
+
+
+    def get(self):
+        blog_post_id = self.request.get('blog_post_id', default_post_id)
+
+        blog_query = Post.get_by_id(blog_post_id)
+        self.render_front(blog_query)
+
+
+    def post(self):
+        blog_post_id = self.request.get('blog_post_id)
+        query_params = {'blog_post_id': blog_post_id}
+        self.redirect('/?' + urllib.urlencode(query_params))
+
+#    def
+
+app = webapp2.WSGIApplication([('/', PostPage),
+                                ('/signup', SignUpPage),
+                                ('/invalidCookie', InvalidCookiePage),
+                                ('/login', LoginPage ),
+                                ('/welcome', WelcomePage),
+                                ('/logout', LogoutPage),
+                                ('/blogPost', BlogPostPage),
+
                                 ],
                                 debug=True)

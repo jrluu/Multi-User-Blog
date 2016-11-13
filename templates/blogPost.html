@@ -1,20 +1,15 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 
-<html>
+{% block content %}
 
-  <h1> BLOG POST</h1>
+  <h1> Specific Blog Post</h1>
+
+  <h2> {{blog_query.title}} </h2>
+  <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
+  <p>
+    {{blog_query.content}}
+  </p>
   <br>
-  <h2> new post </h2>
+  <p>{{blog_query.likes}}</p>
 
-  <form method="post">
-    <label>
-      <div>subject</div>
-      <input type="text" name="subject">
-    </label>
-
-    <label>
-      <div> blog </div>
-      <textarea name="content"></textarea>
-    </label>
-
-</html>
+{% endblock %}

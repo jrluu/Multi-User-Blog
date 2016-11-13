@@ -2,7 +2,7 @@
 
 {% block content %}
 
-  <h1> Signup</h1>
+  <h1> Login</h1>
 
   <form method = "post">
    <label> Username </label>
@@ -13,21 +13,15 @@
    <input type = "password" name = "password" value = "{{password}}" required=true>
    <br>
 
-
-   <label> Verify password </label>
-   <input type = "password" name = "verifypw" value = "{{verifypw}}" required=true>
-   <br>
-
-   <label> Email (optional) </label>
-   <input type = "text" name = "email" value = "{{email}}">
-   <br>
-
-   <div> {{errorUser}}</div>
-   <div> {{errorPass}}</div>
+   <div> {{error}}</div>
 
    </div>
    <input type = "submit">
    <input type = "reset" >
   </form>
+
+  <div>
+     <a href="signup"> Sign up?</a>
+  </div>
 
 {% endblock %}
