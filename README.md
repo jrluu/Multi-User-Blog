@@ -14,17 +14,17 @@ You must have the following installed
 * [Python 2.7](https://www.python.org/download/releases/2.7/)
 
 ##How to run locally
-1. Download the files
+1. Download the files  
 `$ git clone https://github.com/jrluu/Nanodegree.git `
-2. Change to that directory
+2. Change to that directory  
  `$ cd path/to/MultiUserBlog`
-3. Run the appserver
+3. Run the appserver  
 `$ dev.appserver.py .``
 
 
 ## How to Deploy
 1. Run it locally first to generate index.yaml and app.yaml (see instructions above)
-2. Deploy it using gcloud
+2. Deploy it using gcloud  
 `$ gcloud app deploy app.yaml index.yaml`
 3. View it on your local browser  
 `$ gcloud app browse`
@@ -45,4 +45,4 @@ For more information on indexing, see [this](https://cloud.google.com/appengine/
 * Cookies
 
 ##For more information
-Please contact me at jrluu@ucdavis.edu
+Feel free contact me at jrluu@ucdavis.edu
