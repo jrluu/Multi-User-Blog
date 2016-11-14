@@ -29,10 +29,16 @@ def check_secure_val(h):
         return val
 
 
-
 #IDK IF WE WILL NEED THIS
 default_account_id = "default_account_id"
-default_post_id = "default_post_id"
+default_post_id = 1111111111111111
+
+def post_key(post_id=default_post_id):
+    """Constructs a Datastore key for a Post entity.
+
+    We use post_id as the key.
+    """
+    return ndb.Key('Post', post_id)
 
 #Account Kind
 class Account(ndb.Model):
@@ -49,7 +55,9 @@ class Post(ndb.Model):
     likes = ndb.IntegerProperty(default = 0)
     isRoot = ndb.BooleanProperty(default = False)
 
-
+"""Base Handler Class
+Takes care of page rendering and cookies maniupulation
+"""
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -102,11 +110,32 @@ class Handler(webapp2.RequestHandler):
         self.render("blogPost.html", not_found = "Sorry, post not found!")
 
 
+    '''Takes blog_query_id and parent from the header
+        Then looks for it in post.
+        If not found, return "None"
+    '''
+    def find_blog_query(self):
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+
+        #Creates a parent query and checks if it exists
+        parent_id = int(self.request.get('parent', default_post_id))
+        parent_query = Post.get_by_id(parent_id)
+        if parent_query:
+            parent_key = parent_query.key
+            blog_query = Post.get_by_id(blog_post_id, parent_key)
+            ##What if there is a parent query,
+            ##But it doesn't belong to blog_post
+        else:
+            blog_query = Post.get_by_id(blog_post_id)
+
+        return blog_query
+
+
 class InvalidCookiePage(Handler):
     def get(self):
         self.render("invalidCookie.html")
 
-
+#Displays 10 most recent post and allows users to post
 class PostPage(Handler):
     def render_front(self, username = "", password = ""):
 
@@ -133,7 +162,7 @@ class PostPage(Handler):
 
         self.render_front()
 
-
+#Takes care of the page where users can sign up
 class SignUpPage(Handler):
 
     def render_front(self, username = "", password = "", verifypw = "", email = "", errorUser = "", errorPass=""):
@@ -179,7 +208,7 @@ class SignUpPage(Handler):
             self.set_secure_cookie(username, password)
             self.redirect('/welcome')
 
-
+#Takes care of users login
 class LoginPage(Handler):
 
     def render_front(self, username="", password="", error=""):
@@ -203,13 +232,14 @@ class LoginPage(Handler):
 
         self.render_front(username, password, "Invalid Username or Password")
 
-
+#Takes care of user logout
 class LogoutPage(Handler):
     def get(self):
         self.clear_cooke()
         self.redirect('signup')
 
-
+#When users login or sign up, this page welcomes then and then redirects them
+#Redirection is handled in the meta tag in welcome.html
 class WelcomePage(Handler):
 
     def render_front(self):
@@ -223,28 +253,43 @@ class WelcomePage(Handler):
         self.render_front()
 
 
+
+
+'''     Not sure I want to render child of comments.
+        The logic can get too complicated and the search can get too long
+        if the tree gets too deep.
+
+        #Creates a parent query
+        parent_id = int(self.request.get('parent', default_post_id))
+        parent_query = Post.get_by_id(parent_id)
+
+        #Check if there the parent specified is valid
+        if parent_query:
+            parent_key = parent_query.key
+            blog_query = Post.get_by_id(blog_post_id, parent_key)
+        else:
+            blog_query = Post.get_by_id(blog_post_id)
+'''
 class BlogPostPage(Handler):
 
     def render_front(self, blog_query = "", comments = ""):
+        #Query that searches in Post for attributees isRoot and ancestor
+        comments_query = Post.query(Post.isRoot == False,
+                ancestor=blog_query.key).order(-Post.created)
+        comments = comments_query.fetch(10)
         self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
 
     def get(self):
 
         #Must turn blog_post_id into an int because header gives a string
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+
         blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
-            blog_query_key = blog_query.key
-
-            comments_query = Post.query(Post.isRoot == False,
-                ancestor=blog_query_key).order(-Post.created)
-            comments = comments_query.fetch(10)
-            self.render_front(blog_query, comments)
-
+            self.render_front(blog_query)
         else:
             self.render_not_found()
-
 
     def post(self):
         if not self.check_cookie():
@@ -254,15 +299,14 @@ class BlogPostPage(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
-        blog_post_id = int(self.request.get('blog_post_id'))
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+        blog_query = Post.get_by_id(blog_post_id)
 
-        parent_post_key = Post.get_by_id(blog_post_id).key
-
-        post_key = Post(parent = parent_post_key, author = username, title = title, content = content)
+        #Create Post child(this is a comment) on blog_query
+        post_key = Post(parent = blog_query.key, author = username, title = title, content = content)
         post_key.put()
 
-        query_params = {'blog_post_id': blog_post_id}
-        self.redirect('/blogPost?' + urllib.urlencode(query_params))
+        self.render_front(blog_query)
 
 
 class EditPostPage(Handler):
@@ -274,8 +318,7 @@ class EditPostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
-        blog_query = Post.get_by_id(blog_post_id)
+        blog_query = self.find_blog_query()
 
         if blog_query:
             if self.isOwner(blog_query.author):
@@ -294,20 +337,20 @@ class EditPostPage(Handler):
         content = self.request.get("content")
 
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
-        blog_query = Post.get_by_id(blog_post_id)
+
+        blog_query = self.find_blog_query()
 
         if blog_query:
             if self.isOwner(blog_query.author):
                 blog_query.title = title
                 blog_query.content = content
                 blog_query.put()
+                self.render_front(blog_query)
             else:
                 self.render_front(blog_query, "You are not the owner")
         else:
             self.render_not_found()
 
-        query_params = {'blog_post_id': blog_post_id}
-        self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
 
 class DeletePostPage(Handler):
@@ -322,8 +365,7 @@ class DeletePostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
-        blog_query = Post.get_by_id(blog_post_id)
+        blog_query = self.find_blog_query()
 
         if blog_query:
             if self.isOwner(blog_query.author):
@@ -337,16 +379,16 @@ class DeletePostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
-        blog_query = Post.get_by_id(blog_post_id)
-#        self.write(blog_query)
+        blog_query = self.find_blog_query()
+
         response = int(self.request.get('q1'))
 
+        #TODO error if they click submit without a yes or no
         if blog_query:
             if self.isOwner(blog_query.author) and (response == 1):
                 self.write("Deleted post...")
                 blog_query.key.delete()
-                self.render_comment("Post Deleted!")
+#                self.render_comment("Post Deleted!")
             elif self.isOwner(blog_query.author) and (response == 0):
                 self.render_front(blog_query, "Post remains intact!")
             else:

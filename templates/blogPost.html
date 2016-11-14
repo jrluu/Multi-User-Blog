@@ -43,14 +43,19 @@
 
     {% for comment in comments %}
 
-      <h2> {{comment.title}} </h2>
+      <h2>{{ comment.title}} </h2>
       <h3> {{comment.author}} Date: {{comment.created}}</h3>
       <p>
         {{comment.content}}
       </p>
       <br>
       <p>{{comment.likes}}</p>
-
+      <p>
+        key is {{comment.key}}
+      </p>
+      <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Edit comment? </a>
+      <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Delete comment? </a>
+      <br>
     {% endfor %}
 
   {% endif %}
