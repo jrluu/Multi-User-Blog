@@ -213,7 +213,6 @@ class LogoutPage(Handler):
 class WelcomePage(Handler):
 
     def render_front(self):
-
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
@@ -256,17 +255,18 @@ class BlogPostPage(Handler):
         content = self.request.get("content")
 
         blog_post_id = int(self.request.get('blog_post_id'))
-        query_params = {'blog_post_id': blog_post_id}
 
         parent_post_key = Post.get_by_id(blog_post_id).key
+
         post_key = Post(parent = parent_post_key, author = username, title = title, content = content)
         post_key.put()
 
-
+        query_params = {'blog_post_id': blog_post_id}
         self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
 
 class EditPostPage(Handler):
+
     def render_front(self, blog_query = "", error = ""):
         self.render("editPost.html", blog_query = blog_query, error = error)
 
@@ -275,15 +275,13 @@ class EditPostPage(Handler):
             self.redirect('/invalidCookie')
 
         blog_post_id = self.request.get('blog_post_id', default_post_id)
-
         blog_query = Post.get_by_id(int(blog_post_id))
+
         if blog_query:
-            blog_author = blog_query.author
-            if self.isOwner(blog_author):
+            if self.isOwner(blog_query.author):
                 self.render_front(blog_query)
             else:
-                comment = "You are not the owner"
-                self.render_front(blog_query, error)
+                self.render_front(blog_query, "You are not the owner")
         else:
             self.render_not_found()
 
@@ -292,26 +290,23 @@ class EditPostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        username = self.request.cookies.get("username")
         title = self.request.get("title")
         content = self.request.get("content")
 
-        blog_post_id = int(self.request.get('blog_post_id'))
-        query_params = {'blog_post_id': blog_post_id}
-        blog_query = Post.get_by_id(int(blog_post_id))
+        blog_post_id = self.request.get('blog_post_id', default_post_id)
+        blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
-            blog_author = blog_query.author
-            if self.isOwner(blog_author):
+            if self.isOwner(blog_query.author):
                 blog_query.title = title
                 blog_query.content = content
                 blog_query.put()
             else:
-                comment = "You are not the owner"
-                self.render_front(blog_query, error)
+                self.render_front(blog_query, "You are not the owner")
         else:
             self.render_not_found()
 
+        query_params = {'blog_post_id': blog_post_id}
         self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
 
