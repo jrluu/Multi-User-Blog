@@ -34,27 +34,13 @@ def check_secure_val(h):
 default_account_id = "default_account_id"
 default_post_id = "default_post_id"
 
-def get_account_key(account_id = 'default_account_id'):
-    """Constructs a Datascore Key for a Account entity.
-        We use account_id as the key.
-    """
-    return ndb.Key('Account', account_id)
-
-def get_post_key(post_id = 'default_post_id'):
-    """Constructs a Datascore Key for a Post entity.
-        We use post_id as the key.
-    """
-    return ndb.Key('Post', post_id)
-
-
-#Won't be dynamic, so no ndb.Expando class
+#Account Kind
 class Account(ndb.Model):
-    #user = ndb.StringProperty(required = True)
     #the ID will be the user (Key.ID)
     password = ndb.TextProperty(required = True)
     email = ndb.TextProperty()
 
-
+#Post Kind
 class Post(ndb.Model):
     author = ndb.StringProperty(required= True)
     title = ndb.StringProperty(required = True)
@@ -75,12 +61,14 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template,**kw))
 
+    #Set username and password(hashed version) into cookie
     def set_secure_cookie(self, name, val):
         self.response.headers['Content-Type'] = 'text/html'
         cookie_val = str(hash_str(val))
         self.response.headers.add_header('Set-Cookie', 'username = %s' % str(name))
         self.response.headers.add_header('Set-Cookie', 'password = %s' % cookie_val)
 
+    #Checks cookie username and password against database
     def check_cookie(self):
         username = self.request.cookies.get("username")
         password = self.request.cookies.get("password")
@@ -94,10 +82,24 @@ class Handler(webapp2.RequestHandler):
 
         return False
 
+    #Clears Cookie
     def clear_cooke(self):
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers.add_header('Set-Cookie', "username = ")
         self.response.headers.add_header('Set-Cookie', "password = ")
+
+    #Checks input name with stored Cookie's username
+    #NOTE: Should check_cookie first
+    def isOwner(self, name):
+        username = self.request.cookies.get("username")
+        if username:
+            if username == name:
+                return True
+
+        return False
+
+    def render_not_found(self):
+        self.render("blogPost.html", not_found = "Sorry, post not found!")
 
 
 class InvalidCookiePage(Handler):
@@ -227,9 +229,6 @@ class BlogPostPage(Handler):
     def render_front(self, blog_query = "", comments = ""):
         self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
 
-    def render_not_found(self):
-        self.render("blogPost.html", not_found = "Sorry, post not found!")
-
     def get(self):
         blog_post_id = self.request.get('blog_post_id', default_post_id)
 
@@ -260,19 +259,62 @@ class BlogPostPage(Handler):
         query_params = {'blog_post_id': blog_post_id}
 
         parent_post_key = Post.get_by_id(blog_post_id).key
-#        parent_post_key = get_post_key(blog_post_id)
-
-#        self.write(parent_post_key_default)
-
-#        self.write(parent_post_key)
-
         post_key = Post(parent = parent_post_key, author = username, title = title, content = content)
         post_key.put()
 
 
         self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
-#    def
+
+class EditPostPage(Handler):
+    def render_front(self, blog_query = "", error = ""):
+        self.render("editPost.html", blog_query = blog_query, error = error)
+
+    def get(self):
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        blog_post_id = self.request.get('blog_post_id', default_post_id)
+
+        blog_query = Post.get_by_id(int(blog_post_id))
+        if blog_query:
+            blog_author = blog_query.author
+            if self.isOwner(blog_author):
+                self.render_front(blog_query)
+            else:
+                comment = "You are not the owner"
+                self.render_front(blog_query, error)
+        else:
+            self.render_not_found()
+
+
+    def post(self):
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        username = self.request.cookies.get("username")
+        title = self.request.get("title")
+        content = self.request.get("content")
+
+        blog_post_id = int(self.request.get('blog_post_id'))
+        query_params = {'blog_post_id': blog_post_id}
+        blog_query = Post.get_by_id(int(blog_post_id))
+
+        if blog_query:
+            blog_author = blog_query.author
+            if self.isOwner(blog_author):
+                blog_query.title = title
+                blog_query.content = content
+                blog_query.put()
+            else:
+                comment = "You are not the owner"
+                self.render_front(blog_query, error)
+        else:
+            self.render_not_found()
+
+        self.redirect('/blogPost?' + urllib.urlencode(query_params))
+
+
 
 app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/signup', SignUpPage),
@@ -281,6 +323,6 @@ app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/welcome', WelcomePage),
                                 ('/logout', LogoutPage),
                                 ('/blogPost', BlogPostPage),
-
+                                ('/editPost', EditPostPage),
                                 ],
                                 debug=True)
