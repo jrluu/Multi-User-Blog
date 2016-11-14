@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+  <h1> Your Post </h1>
+  <hr >
+
+  <h1> {{blog_query.title}} </h1>
+  <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
+  <p>
+    {{blog_query.content}}
+  </p>
+  <br>
+  <p>{{blog_query.likes}}</p>
+
+
+  <form method="post">
+    <label>
+      <h2> Are you sure you want to delete the following post? </h2>
+    </label>
+
+    <input type="radio" name="q1" value="1">Yes
+    <input type="radio" name="q1" value="0">No
+
+    <input type="submit" >
+
+  </form>
+
+
+
+{% endblock %}

@@ -229,10 +229,10 @@ class BlogPostPage(Handler):
         self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
 
     def get(self):
-        blog_post_id = self.request.get('blog_post_id', default_post_id)
 
         #Must turn blog_post_id into an int because header gives a string
-        blog_query = Post.get_by_id(int(blog_post_id))
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+        blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
             blog_query_key = blog_query.key
@@ -274,8 +274,8 @@ class EditPostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        blog_post_id = self.request.get('blog_post_id', default_post_id)
-        blog_query = Post.get_by_id(int(blog_post_id))
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+        blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
             if self.isOwner(blog_query.author):
@@ -293,7 +293,7 @@ class EditPostPage(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
-        blog_post_id = self.request.get('blog_post_id', default_post_id)
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
         blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
@@ -310,6 +310,49 @@ class EditPostPage(Handler):
         self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
 
+class DeletePostPage(Handler):
+
+    def render_option(self, blog_query = ""):
+        self.render("deletePost.html", blog_query = blog_query)
+
+    def render_front(self, blog_query = "", error = ""):
+        self.render("editPost.html", blog_query = blog_query, error = error)
+
+    def get(self):
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+        blog_query = Post.get_by_id(blog_post_id)
+
+        if blog_query:
+            if self.isOwner(blog_query.author):
+                self.render_option(blog_query)
+            else:
+                self.render_front(blog_query, "You are not the owner")
+        else:
+            self.render_not_found()
+
+    def post(self):
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
+        blog_query = Post.get_by_id(blog_post_id)
+#        self.write(blog_query)
+        response = int(self.request.get('q1'))
+
+        if blog_query:
+            if self.isOwner(blog_query.author) and (response == 1):
+                self.write("Deleted post...")
+                blog_query.key.delete()
+                self.render_comment("Post Deleted!")
+            elif self.isOwner(blog_query.author) and (response == 0):
+                self.render_front(blog_query, "Post remains intact!")
+            else:
+                self.render_front(blog_query, "You are not the owner")
+        else:
+            self.render_not_found()
 
 app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/signup', SignUpPage),
@@ -319,5 +362,6 @@ app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/logout', LogoutPage),
                                 ('/blogPost', BlogPostPage),
                                 ('/editPost', EditPostPage),
+                                ('/deletePost', DeletePostPage),
                                 ],
                                 debug=True)
