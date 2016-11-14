@@ -61,8 +61,7 @@ class Post(ndb.Model):
     content = ndb.TextProperty(required = True)
     created = ndb.DateTimeProperty(auto_now_add = True)
     likes = ndb.IntegerProperty(default = 0)
-    #Parent = ndb. StructuredProperty()
-    #Child =  ndb. StructuredProperty(repeated = True)
+    isRoot = ndb.BooleanProperty(default = False)
 
 
 class Handler(webapp2.RequestHandler):
@@ -112,7 +111,7 @@ class PostPage(Handler):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        post_query = Post.query().order(-Post.created).fetch(10)
+        post_query = Post.query(Post.isRoot == True).order(-Post.created).fetch(10)
         self.render("post.html", post_query = post_query, username = username, password = password)
 
     def get(self):
@@ -127,7 +126,7 @@ class PostPage(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
-        post_key = Post(author = username, title = title, content = content)
+        post_key = Post(author = username, title = title, content = content, isRoot = True)
         post_key.put()
 
         self.render_front()
@@ -234,18 +233,17 @@ class BlogPostPage(Handler):
     def get(self):
         blog_post_id = self.request.get('blog_post_id', default_post_id)
 
-        self.write(blog_post_id)
         #Must turn blog_post_id into an int because header gives a string
         blog_query = Post.get_by_id(int(blog_post_id))
 
         if blog_query:
             blog_query_key = blog_query.key
 
-            comments_query = Post.query(
+            comments_query = Post.query(Post.isRoot == False,
                 ancestor=blog_query_key).order(-Post.created)
-                
             comments = comments_query.fetch(10)
             self.render_front(blog_query, comments)
+
         else:
             self.render_not_found()
 
