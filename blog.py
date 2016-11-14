@@ -4,7 +4,7 @@ import jinja2
 import hashlib
 import hmac
 import time
-
+import urllib
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -34,17 +34,17 @@ def check_secure_val(h):
 default_account_id = "default_account_id"
 default_post_id = "default_post_id"
 
-def account_key(account_id = 'default_account_id'):
+def get_account_key(account_id = 'default_account_id'):
     """Constructs a Datascore Key for a Account entity.
         We use account_id as the key.
     """
-    return ndb.Key('Accounts', account_id)
+    return ndb.Key('Account', account_id)
 
-def post_key(post_id = 'default_post_id'):
+def get_post_key(post_id = 'default_post_id'):
     """Constructs a Datascore Key for a Post entity.
         We use post_id as the key.
     """
-    return ndb.Key('Posts', post_id)
+    return ndb.Key('Post', post_id)
 
 
 #Won't be dynamic, so no ndb.Expando class
@@ -225,8 +225,8 @@ class WelcomePage(Handler):
 
 class BlogPostPage(Handler):
 
-    def render_front(self, blog_query = ""):
-        self.render("blogPost.html", blog_query = blog_query, not_found ="")
+    def render_front(self, blog_query = "", comments = ""):
+        self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
 
     def render_not_found(self):
         self.render("blogPost.html", not_found = "Sorry, post not found!")
@@ -234,19 +234,46 @@ class BlogPostPage(Handler):
     def get(self):
         blog_post_id = self.request.get('blog_post_id', default_post_id)
 
+        self.write(blog_post_id)
         #Must turn blog_post_id into an int because header gives a string
         blog_query = Post.get_by_id(int(blog_post_id))
+
         if blog_query:
-            self.render_front(blog_query)
+            blog_query_key = blog_query.key
+
+            comments_query = Post.query(
+                ancestor=blog_query_key).order(-Post.created)
+                
+            comments = comments_query.fetch(10)
+            self.render_front(blog_query, comments)
         else:
             self.render_not_found()
 
-'''
+
     def post(self):
-        blog_post_id = self.request.get('blog_post_id', default_post_id)
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+
+        username = self.request.cookies.get("username")
+        title = self.request.get("title")
+        content = self.request.get("content")
+
+        blog_post_id = int(self.request.get('blog_post_id'))
         query_params = {'blog_post_id': blog_post_id}
-        self.redirect('/?' + urllib.urlencode(query_params))
-'''
+
+        parent_post_key = Post.get_by_id(blog_post_id).key
+#        parent_post_key = get_post_key(blog_post_id)
+
+#        self.write(parent_post_key_default)
+
+#        self.write(parent_post_key)
+
+        post_key = Post(parent = parent_post_key, author = username, title = title, content = content)
+        post_key.put()
+
+
+        self.redirect('/blogPost?' + urllib.urlencode(query_params))
+
 #    def
 
 app = webapp2.WSGIApplication([('/', PostPage),

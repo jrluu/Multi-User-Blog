@@ -8,7 +8,7 @@
   <form method="post">
     <label>
       <h2> Title </h2>
-      <input type = "text" name = "title" />
+      <input type = "text" name = "title" >
     </label>
 
     <label>
@@ -17,7 +17,7 @@
     </label>
 
     <br>
-    <input type="submit" />
+    <input type="submit" >
 
   </form>
 
@@ -26,16 +26,14 @@
   <hr>
 
   {% for post in post_query %}
-  {# {}{ [blogpost?blog_post_id=, post.key.id] | join }} #}
 
-  <a href="blogPost?blog_post_id={{post.key.id()}}"> {{post.title}} </a>
-  <h3> {{post.author}} Date: {{post.created}}</h3>
-  <p>
-    {{post.content}}
-  </p>
-  <br>
-  <p>{{post.likes}}</p>
-
+    <a href="blogPost?blog_post_id={{post.key.id()}}"> {{post.title}} </a>
+    <h3> {{post.author}} Date: {{post.created}}</h3>
+    <p>
+      {{post.content}}
+    </p>
+    <br>
+    <p>{{post.likes}}</p>
 
   {% endfor %}
 
