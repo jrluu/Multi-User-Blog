@@ -11,8 +11,6 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
 
-
-
 SECRET = "SamSmith"
 def hash_str(s):
     return hmac.new(SECRET,s).hexdigest()
@@ -28,9 +26,10 @@ def check_secure_val(h):
     if hmac.compare_digest(h, make_secure_val(val)):
         return val
 
-
-#IDK IF WE WILL NEED THIS
-default_account_id = "default_account_id"
+'''
+Kind Information
+(Kind is a group of entities or similarly, tables in SQL)
+ '''
 default_post_id = 1111111111111111
 
 def post_key(post_id=default_post_id):
@@ -55,8 +54,10 @@ class Post(ndb.Model):
     likes = ndb.IntegerProperty(default = 0)
     isRoot = ndb.BooleanProperty(default = False)
 
-"""Base Handler Class
-Takes care of page rendering and cookies maniupulation
+
+"""
+Base Handler Class
+Takes care of page rendering, cookies maniupulation, and header
 """
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -115,6 +116,7 @@ class Handler(webapp2.RequestHandler):
         If not found, return "None"
     '''
     def find_blog_query(self):
+
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
 
         #Creates a parent query and checks if it exists
@@ -123,22 +125,20 @@ class Handler(webapp2.RequestHandler):
         if parent_query:
             parent_key = parent_query.key
             blog_query = Post.get_by_id(blog_post_id, parent_key)
-            ##What if there is a parent query,
-            ##But it doesn't belong to blog_post
         else:
             blog_query = Post.get_by_id(blog_post_id)
 
         return blog_query
 
-
+'''Classes of Pages '''
 class InvalidCookiePage(Handler):
     def get(self):
         self.render("invalidCookie.html")
 
+
 #Displays 10 most recent post and allows users to post
 class PostPage(Handler):
     def render_front(self, username = "", password = ""):
-
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
@@ -149,7 +149,6 @@ class PostPage(Handler):
         self.render_front()
 
     def post(self):
-
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
@@ -161,6 +160,7 @@ class PostPage(Handler):
         post_key.put()
 
         self.render_front()
+
 
 #Takes care of the page where users can sign up
 class SignUpPage(Handler):
@@ -184,7 +184,6 @@ class SignUpPage(Handler):
         redirect = False
 
         if username and password and verifypw:
-
             account_query = Account.get_by_id(username)
 
             if account_query:
@@ -207,6 +206,7 @@ class SignUpPage(Handler):
             user.put()
             self.set_secure_cookie(username, password)
             self.redirect('/welcome')
+
 
 #Takes care of users login
 class LoginPage(Handler):
@@ -232,11 +232,13 @@ class LoginPage(Handler):
 
         self.render_front(username, password, "Invalid Username or Password")
 
-#Takes care of user logout
+
+#Takes care of user logout by clearing cookie
 class LogoutPage(Handler):
     def get(self):
         self.clear_cooke()
         self.redirect('signup')
+
 
 #When users login or sign up, this page welcomes then and then redirects them
 #Redirection is handled in the meta tag in welcome.html
@@ -253,23 +255,6 @@ class WelcomePage(Handler):
         self.render_front()
 
 
-
-
-'''     Not sure I want to render child of comments.
-        The logic can get too complicated and the search can get too long
-        if the tree gets too deep.
-
-        #Creates a parent query
-        parent_id = int(self.request.get('parent', default_post_id))
-        parent_query = Post.get_by_id(parent_id)
-
-        #Check if there the parent specified is valid
-        if parent_query:
-            parent_key = parent_query.key
-            blog_query = Post.get_by_id(blog_post_id, parent_key)
-        else:
-            blog_query = Post.get_by_id(blog_post_id)
-'''
 class BlogPostPage(Handler):
 
     def render_front(self, blog_query = "", comments = ""):
@@ -280,10 +265,7 @@ class BlogPostPage(Handler):
         self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
 
     def get(self):
-
-        #Must turn blog_post_id into an int because header gives a string
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
-
         blog_query = Post.get_by_id(blog_post_id)
 
         if blog_query:
@@ -328,22 +310,16 @@ class EditPostPage(Handler):
         else:
             self.render_not_found()
 
-
     def post(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
-
-        title = self.request.get("title")
-        content = self.request.get("content")
-
-        blog_post_id = int(self.request.get('blog_post_id', default_post_id))
 
         blog_query = self.find_blog_query()
 
         if blog_query:
             if self.isOwner(blog_query.author):
-                blog_query.title = title
-                blog_query.content = content
+                blog_query.title = self.request.get("title")
+                blog_query.content = self.request.get("content")
                 blog_query.put()
                 self.render_front(blog_query)
             else:
@@ -352,12 +328,12 @@ class EditPostPage(Handler):
             self.render_not_found()
 
 
-
 class DeletePostPage(Handler):
 
     def render_option(self, blog_query = ""):
         self.render("deletePost.html", blog_query = blog_query)
 
+    #Taken from editPost Class
     def render_front(self, blog_query = "", error = ""):
         self.render("editPost.html", blog_query = blog_query, error = error)
 
@@ -380,21 +356,19 @@ class DeletePostPage(Handler):
             self.redirect('/invalidCookie')
 
         blog_query = self.find_blog_query()
-
         response = int(self.request.get('q1'))
 
-        #TODO error if they click submit without a yes or no
         if blog_query:
             if self.isOwner(blog_query.author) and (response == 1):
-                self.write("Deleted post...")
                 blog_query.key.delete()
-#                self.render_comment("Post Deleted!")
+                self.redirect("/")
             elif self.isOwner(blog_query.author) and (response == 0):
                 self.render_front(blog_query, "Post remains intact!")
             else:
                 self.render_front(blog_query, "You are not the owner")
         else:
             self.render_not_found()
+
 
 app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/signup', SignUpPage),
