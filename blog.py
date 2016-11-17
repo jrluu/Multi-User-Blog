@@ -345,12 +345,8 @@ class EditPostPage(Handler):
 
 class DeletePostPage(Handler):
 
-    def render_option(self, blog_query = ""):
-        self.render("deletePost.html", blog_query = blog_query)
-
-    #Taken from editPost Class
     def render_front(self, blog_query = "", error = ""):
-        self.render("editPost.html", blog_query = blog_query, error = error)
+        self.render("deletePost.html", blog_query = blog_query, error = error)
 
     def get(self):
         if not self.check_cookie():
@@ -360,7 +356,7 @@ class DeletePostPage(Handler):
 
         if blog_query:
             if self.isOwner(blog_query.author):
-                self.render_option(blog_query)
+                self.render_front(blog_query)
             else:
                 self.render_front(blog_query, "You are not the owner")
         else:

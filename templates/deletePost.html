@@ -14,18 +14,22 @@
   <br>
   <p>{{blog_query.likes}}</p>
 
+  {% if not error %}
+    <form method="post">
+      <label>
+        <h2> Are you sure you want to delete the following post? </h2>
+      </label>
 
-  <form method="post">
-    <label>
-      <h2> Are you sure you want to delete the following post? </h2>
-    </label>
+      <input type="radio" name="q1" value="1" checked="checked">Yes
+      <input type="radio" name="q1" value="0">No
 
-    <input type="radio" name="q1" value="1" checked="checked">Yes
-    <input type="radio" name="q1" value="0">No
+      <input type="submit" >
 
-    <input type="submit" >
+    </form>
+  {% else %}
+    <p> {{error}} </p>
 
-  </form>
+  {% endif %}
 
 
 
