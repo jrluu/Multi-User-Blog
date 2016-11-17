@@ -48,7 +48,7 @@ class Account(ndb.Model):
 #Post Kind
 class Post(ndb.Model):
     author = ndb.StringProperty(required= True)
-    title = ndb.StringProperty(required = True)
+    title = ndb.StringProperty()
     content = ndb.TextProperty(required = True)
     created = ndb.DateTimeProperty(auto_now_add = True)
     likes = ndb.IntegerProperty(default = 0)
@@ -168,7 +168,8 @@ class CreatePostPage(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
-        post_obj = Post(author = username, title = title, content = content, isRoot = True)
+        post_obj = Post(author = username, title = title, content = content,
+                        isRoot = True)
         post_obj.put()
 
         blog_query_id = post_obj.key.id()
@@ -179,10 +180,11 @@ class CreatePostPage(Handler):
 #Takes care of the page where users can sign up
 class SignUpPage(Handler):
 
-    def render_front(self, username = "", password = "", verifypw = "", email = "", errorUser = "", errorPass=""):
+    def render_front(self, username = "", password = "", verifypw = "",
+                     email = "", errorUser = "", errorPass = ""):
         self.render("sign_up.html", username = username, password = password,
                     verifypw = verifypw, email = email, errorUser = errorUser,
-                    errorPass= errorPass)
+                    errorPass = errorPass)
 
     def get(self):
         self.render_front()
@@ -276,7 +278,7 @@ class BlogPostPage(Handler):
         comments_query = Post.query(Post.isRoot == False,
                 ancestor=blog_query.key).order(-Post.created)
         comments = comments_query.fetch(10)
-        self.render("blogPost.html", blog_query = blog_query, comments = comments, not_found ="")
+        self.render("blogPost.html", blog_query = blog_query, comments = comments)
 
     def get(self):
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
@@ -292,14 +294,13 @@ class BlogPostPage(Handler):
             self.redirect('/invalidCookie')
 
         username = self.request.cookies.get("username")
-        title = self.request.get("title")
         content = self.request.get("content")
 
         blog_post_id = int(self.request.get('blog_post_id', default_post_id))
         blog_query = Post.get_by_id(blog_post_id)
 
         #Create Post child(this is a comment) on blog_query
-        post_key = Post(parent = blog_query.key, author = username, title = title, content = content)
+        post_key = Post(parent = blog_query.key, author = username, content = content)
         post_key.put()
 
         self.render_front(blog_query)

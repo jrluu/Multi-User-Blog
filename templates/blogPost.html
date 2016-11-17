@@ -2,61 +2,55 @@
 
 {% block content %}
 
-  <h2> {{not_found}}</h2>
+  <h1> {{blog_query.title}} </h1>
+  <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
+  <p>
+    {{blog_query.content}}
+  </p>
+  <br>
+  <p>{{blog_query.likes}}</p>
+
+  <a href="editPost?blog_post_id={{blog_query.key.id()}}"> Edit comment? </a>
+  <a href="deletePost?blog_post_id={{blog_query.key.id()}}"> Delete comment? </a>
+  <a href="vote?blog_post_id={{blog_query.key.id()}}&value=1">Upvote!</a>
+  <a href="vote?blog_post_id={{blog_query.key.id()}}&value=-1">Downvote!</a>
 
 
-  {%if blog_query%}
-    <h1> {{blog_query.title}} </h1>
-    <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
+  <hr>
+
+  <form method="post">
+
+    <label>
+      <h2> Content </h2>
+      <textarea name="content"></textarea>
+    </label>
+
+    <br>
+    <input type="submit" >
+
+  </form>
+
+  <br>
+  <hr>
+
+
+
+  <h1> Latest Comments Posts </h1>
+  <hr>
+
+  {% for comment in comments %}
+    <h3> {{comment.author}} Date: {{comment.created}}</h3>
     <p>
-      {{blog_query.content}}
+      {{comment.content}}
     </p>
     <br>
-    <p>{{blog_query.likes}}</p>
+    <p>{{comment.likes}}</p>
 
-
-    <hr>
-
-    <form method="post">
-      <label>
-        <h2> Title </h2>
-        <input type = "text" name = "title" >
-      </label>
-
-      <label>
-        <h2> Content </h2>
-        <textarea name="content"></textarea>
-      </label>
-
-      <br>
-      <input type="submit" >
-
-    </form>
-
+    <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Edit comment? </a>
+    <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Delete comment? </a>
+    <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=1">Upvote!</a>
+    <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=-1">Downvote!</a>
     <br>
-    <hr>
+  {% endfor %}
 
-
-
-    <h1> Latest Comments Posts </h1>
-    <hr>
-
-    {% for comment in comments %}
-
-      <h2>{{ comment.title}} </h2>
-      <h3> {{comment.author}} Date: {{comment.created}}</h3>
-      <p>
-        {{comment.content}}
-      </p>
-      <br>
-      <p>{{comment.likes}}</p>
-
-      <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Edit comment? </a>
-      <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Delete comment? </a>
-      <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=1">Upvote!</a>
-      <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=-1">Downvote!</a>
-      <br>
-    {% endfor %}
-
-  {% endif %}
 {% endblock %}
