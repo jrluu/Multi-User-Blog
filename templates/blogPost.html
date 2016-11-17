@@ -53,6 +53,8 @@
 
       <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Edit comment? </a>
       <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Delete comment? </a>
+      <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=1">Upvote!</a>
+      <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=-1">Downvote!</a>
       <br>
     {% endfor %}
 

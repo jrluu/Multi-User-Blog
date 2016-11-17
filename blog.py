@@ -54,6 +54,12 @@ class Post(ndb.Model):
     likes = ndb.IntegerProperty(default = 0)
     isRoot = ndb.BooleanProperty(default = False)
 
+class Vote(ndb.Model):
+    post = ndb.KeyProperty( kind  = Post)
+    #thought about making an array of user_id, but
+    #entity have a limit of 1 MB or 20,000 index
+    user_id = ndb.StringProperty( required = True)
+    value = ndb.IntegerProperty(default = 0)
 
 """
 Base Handler Class
@@ -369,6 +375,49 @@ class DeletePostPage(Handler):
         else:
             self.render_not_found()
 
+class votePage(Handler):
+
+    def decideValue(self, value):
+        value = int(value)
+        if value >= 1:
+            value = 1
+        else:
+            value = -1
+        return value
+
+    def get(self):
+        blog_query = self.find_blog_query()
+        parent_id = self.request.get("parent")
+        voter = self.request.cookies.get("username")
+        value = self.request.get("value")
+
+        if value:
+            value = self.decideValue(value)
+
+        if blog_query:
+            vote_query = Vote.query(Vote.post == blog_query.key, Vote.user_id ==  voter).get()
+            if vote_query:
+                self.write(vote_query.value)
+                if vote_query.value != value:
+                    vote_query.value = value
+                    #Mulitply by 2 to undo previous action
+                    blog_query.likes += (2 * value)
+            else:
+                vote_query = Vote(post = blog_query.key, user_id = voter, value = value)
+                blog_query.likes += value
+            vote_query.put()
+            blog_query.put()
+
+            if parent_id:
+                query_params = {'blog_post_id': parent_id}
+            else:
+                blog_query_id = blog_query.key.id()
+                query_params = {'blog_post_id': blog_query_id}
+            self.redirect('/blogPost?' + urllib.urlencode(query_params))
+
+        self.render_not_found()
+
+
 
 app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/signup', SignUpPage),
@@ -379,5 +428,7 @@ app = webapp2.WSGIApplication([('/', PostPage),
                                 ('/blogPost', BlogPostPage),
                                 ('/editPost', EditPostPage),
                                 ('/deletePost', DeletePostPage),
+                                ("/vote", votePage),
+
                                 ],
                                 debug=True)
