@@ -140,16 +140,22 @@ class Handler(webapp2.RequestHandler):
 class InvalidCookiePage(Handler):
     def get(self):
         self.render("invalidCookie.html")
+#Displays 10 most recent post
+class FrontPage(Handler):
+    def render_front(self):
+        post_query = Post.query(Post.isRoot == True).order(-Post.created).fetch(10)
+        self.render("frontPage.html", post_query = post_query)
 
+    def get(self):
+        self.render_front()
 
-#Displays 10 most recent post and allows users to post
-class PostPage(Handler):
-    def render_front(self, username = "", password = ""):
+# Allows users to post a blog
+class CreatePostPage(Handler):
+    def render_front(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
 
-        post_query = Post.query(Post.isRoot == True).order(-Post.created).fetch(10)
-        self.render("post.html", post_query = post_query, username = username, password = password)
+        self.render("post.html")
 
     def get(self):
         self.render_front()
@@ -162,10 +168,12 @@ class PostPage(Handler):
         title = self.request.get("title")
         content = self.request.get("content")
 
-        post_key = Post(author = username, title = title, content = content, isRoot = True)
-        post_key.put()
+        post_obj = Post(author = username, title = title, content = content, isRoot = True)
+        post_obj.put()
 
-        self.render_front()
+        blog_query_id = post_obj.key.id()
+        query_params = {'blog_post_id': blog_query_id}
+        self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
 
 #Takes care of the page where users can sign up
@@ -418,13 +426,13 @@ class votePage(Handler):
         self.render_not_found()
 
 
-
-app = webapp2.WSGIApplication([('/', PostPage),
+app = webapp2.WSGIApplication([('/', FrontPage),
                                 ('/signup', SignUpPage),
                                 ('/invalidCookie', InvalidCookiePage),
                                 ('/login', LoginPage ),
                                 ('/welcome', WelcomePage),
                                 ('/logout', LogoutPage),
+                                ('/createPost', CreatePostPage),
                                 ('/blogPost', BlogPostPage),
                                 ('/editPost', EditPostPage),
                                 ('/deletePost', DeletePostPage),
