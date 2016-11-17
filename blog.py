@@ -153,6 +153,7 @@ class CreatePostPage(Handler):
     def render_front(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         self.render("post.html")
 
@@ -162,6 +163,7 @@ class CreatePostPage(Handler):
     def post(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         username = self.request.cookies.get("username")
         title = self.request.get("title")
@@ -262,6 +264,7 @@ class WelcomePage(Handler):
     def render_front(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         username = self.request.cookies.get("username")
         self.render("welcome.html", username=username)
@@ -291,6 +294,7 @@ class BlogPostPage(Handler):
     def post(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         username = self.request.cookies.get("username")
         content = self.request.get("content")
@@ -313,6 +317,7 @@ class EditPostPage(Handler):
     def get(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         blog_query = self.find_blog_query()
 
@@ -327,6 +332,7 @@ class EditPostPage(Handler):
     def post(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         blog_query = self.find_blog_query()
 
@@ -350,6 +356,7 @@ class DeletePostPage(Handler):
     def get(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         blog_query = self.find_blog_query()
 
@@ -364,6 +371,7 @@ class DeletePostPage(Handler):
     def post(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
+            return
 
         blog_query = self.find_blog_query()
         response = int(self.request.get('q1'))
@@ -390,6 +398,11 @@ class votePage(Handler):
         return value
 
     def get(self):
+
+        if not self.check_cookie():
+            self.redirect('/invalidCookie')
+            return
+
         blog_query = self.find_blog_query()
         parent_id = self.request.get("parent")
         voter = self.request.cookies.get("username")
