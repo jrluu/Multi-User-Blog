@@ -114,8 +114,7 @@ class Handler(webapp2.RequestHandler):
         return False
 
     def render_not_found(self):
-        self.render("blogPost.html", not_found = "Sorry, post not found!")
-
+        self.render("notFound.html")
 
     '''Takes blog_query_id and parent from the header
         Then looks for it in post.
