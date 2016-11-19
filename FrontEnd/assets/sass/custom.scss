@@ -1,0 +1,82 @@
+$ff: 'arial';
+$color1: #02b3e4;
+$color2: #2d3c49;
+$color3: #7d97ad;
+
+$screen-xs-max: 767px;
+$screen-sm-min: 768px;
+$screen-sm-max: 991px;
+$screen-md-min: 992px;
+$screen-md-max: 1999px;
+$screen-lg-min: 1200px;
+
+.navbar-style{
+  padding-top:10px;
+  padding-bottom: 10px;
+  margin-bottom: 50px;
+}
+
+.top{
+
+
+}
+
+/* Logo */
+.logo{
+  margin: 10px;
+  width: 100px;
+  height: 100px;
+}
+
+
+hr{
+  color: $color3;
+  border: solid 2px;
+
+}
+
+/* Color */
+.color_1{
+  color: $color1;
+
+}
+
+.color_2{
+  color: $color2;
+
+}
+
+.color_3{
+  color: $color3;
+
+}
+
+
+
+@media (max-width: $screen-xs-max) {
+
+  h1{
+    font-size: 25px !important;
+
+  }
+
+  h2{
+    font-size: 20px !important;
+
+  }
+
+  h3{
+    font-size: 15px !important;
+
+  }
+
+  p{
+    font-size: 10px !important;
+
+  }
+}
+
+/* Extra Viewport Settings (currently not used in this sass file) */
+@media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) { }
+@media (min-width: $screen-md-min) and (max-width: $screen-md-max) { }
+@media (min-width: $screen-lg-min) { }

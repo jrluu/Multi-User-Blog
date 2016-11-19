@@ -1,0 +1,40 @@
+.navbar-style {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 50px; }
+
+/* Logo */
+.logo {
+  margin: 10px;
+  width: 100px;
+  height: 100px; }
+
+hr {
+  color: #7d97ad;
+  border: solid 2px; }
+
+/* Color */
+.color_1 {
+  color: #02b3e4; }
+
+.color_2 {
+  color: #2d3c49; }
+
+.color_3 {
+  color: #7d97ad; }
+
+@media (max-width: 767px) {
+  h1 {
+    font-size: 25px !important; }
+
+  h2 {
+    font-size: 20px !important; }
+
+  h3 {
+    font-size: 15px !important; }
+
+  p {
+    font-size: 10px !important; } }
+/* Extra Viewport Settings (currently not used in this sass file) */
+
+/*# sourceMappingURL=custom.css.map */
