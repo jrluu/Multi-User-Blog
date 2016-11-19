@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import time
 import urllib
+from flask import Flask
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -15,28 +16,10 @@ SECRET = "SamSmith"
 def hash_str(s):
     return hmac.new(SECRET,s).hexdigest()
 
-#Takes in some value, and returns "value,hash"
-def make_secure_val(s):
-    return "%s|%s" %(s, hash_str(s))
-
-#Takes in a string of format "value,hash"
-#Return value if true
-def check_secure_val(h):
-    val = h.split(',')[0]
-    if hmac.compare_digest(h, make_secure_val(val)):
-        return val
-
-'''
-Kind Information
-(Kind is a group of entities or similarly, tables in SQL)
- '''
 default_post_id = 1111111111111111
 
+#Constructs a Datascore key for a Post Entity
 def post_key(post_id=default_post_id):
-    """Constructs a Datastore key for a Post entity.
-
-    We use post_id as the key.
-    """
     return ndb.Key('Post', post_id)
 
 #Account Kind
@@ -139,6 +122,8 @@ class Handler(webapp2.RequestHandler):
 class InvalidCookiePage(Handler):
     def get(self):
         self.render("invalidCookie.html")
+
+
 #Displays 10 most recent post
 class FrontPage(Handler):
     def render_front(self):
@@ -147,6 +132,7 @@ class FrontPage(Handler):
 
     def get(self):
         self.render_front()
+
 
 # Allows users to post a blog
 class CreatePostPage(Handler):
@@ -314,6 +300,16 @@ class EditPostPage(Handler):
     def render_front(self, blog_query = "", error = ""):
         self.render("editPost.html", blog_query = blog_query, error = error)
 
+    def redirect_to_post(self, blog_query):
+        parent_id = self.request.get("parent")
+
+        if parent_id:
+            query_params = {'blog_post_id': parent_id}
+        else:
+            blog_query_id = blog_query.key.id()
+            query_params = {'blog_post_id': blog_query_id}
+        self.redirect('/blogPost?' + urllib.urlencode(query_params))
+
     def get(self):
         if not self.check_cookie():
             self.redirect('/invalidCookie')
@@ -341,7 +337,9 @@ class EditPostPage(Handler):
                 blog_query.title = self.request.get("title")
                 blog_query.content = self.request.get("content")
                 blog_query.put()
-                self.render_front(blog_query)
+
+                self.redirect_to_post(blog_query)
+
             else:
                 self.render_front(blog_query, "You are not the owner")
         else:
@@ -387,7 +385,8 @@ class DeletePostPage(Handler):
         else:
             self.render_not_found()
 
-class votePage(Handler):
+
+class VotePage(Handler):
 
     def decideValue(self, value):
         value = int(value)
@@ -445,7 +444,7 @@ app = webapp2.WSGIApplication([('/', FrontPage),
                                 ('/blogPost', BlogPostPage),
                                 ('/editPost', EditPostPage),
                                 ('/deletePost', DeletePostPage),
-                                ("/vote", votePage),
+                                ("/vote", VotePage),
 
                                 ],
                                 debug=True)
