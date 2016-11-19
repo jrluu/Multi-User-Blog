@@ -86,7 +86,7 @@ module.exports = function(grunt) {
             tasks:['imagemin'],
           },
           html_change:{
-            files:['FrontEnd/assets/index.html'],
+            files:['templates/assets/*'],
             tasks:['htmlmin'],
           },
           css_change:{
