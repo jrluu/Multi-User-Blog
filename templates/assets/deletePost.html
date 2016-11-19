@@ -3,33 +3,53 @@
 {% block content %}
 
 
-  <h1> Your Post </h1>
-  <hr >
+  <div class="row">
+    <div class="col-md-12">
+      <h1> Delete Post? </h1>
+      <hr>
+    </div>
+  </div>
 
-  <h1> {{blog_query.title}} </h1>
-  <h3> {{blog_query.author}} Date: {{blog_query.created}}</h3>
-  <p>
-    {{blog_query.content}}
-  </p>
-  <br>
-  <p>{{blog_query.likes}}</p>
+  <section class="row">
+    <div class="col-md-12">
+      <h2> {{blog_query.title}} </h1>
+    </div>
 
-  {% if not error %}
-    <form method="post">
-      <label>
-        <h2> Are you sure you want to delete the following post? </h2>
-      </label>
+    <div class="col-md-12">
+      <p> {{blog_query.author}}, {{blog_query.created.strftime('%b %d, %Y')}}, Post Points: {{blog_query.likes}} </p>
+    </div>
 
-      <input type="radio" name="q1" value="1" checked="checked">Yes
-      <input type="radio" name="q1" value="0">No
+    <div class="col-md-12">
+      <h3> {{blog_query.content}} </h3>
+    </div>
+  </section>
 
-      <input type="submit" >
+  <section class="row">
+    <div class="col-md-12">
+      {% if not error %}
+        <form method="post">
+          <label>
+            <h2> Are you sure you want to delete the following post? </h2>
+          </label>
 
-    </form>
-  {% else %}
-    <p> {{error}} </p>
+          <div class="input-group">
+            <input type="radio" name="q1" value="1" checked="checked">Yes
+            <input type="radio" name="q1" value="0">No
+          </div>
 
-  {% endif %}
+
+          <button type="submit" class="btn btn-default"> Submit </button>
+
+        </form>
+
+      {% else %}
+        <p> {{error}} </p>
+
+      {% endif %}
+
+    </div>
+  </section>
+
 
 
 
