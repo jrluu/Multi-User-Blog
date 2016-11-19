@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
+
   <section class = "row">
+
     <div class="col-md-12">
-      <h1> {{blog_query.title}} </h1>
+      <h2> {{blog_query.title}} </h1>
     </div>
 
     <div class="col-md-12">
-      <h3> {{blog_query.author}} Created: {{blog_query.created}}</h3>
+      <p> {{blog_query.author}}, {{blog_query.created.strftime('%b %d, %Y')}}, Post Points: {{blog_query.likes}} </p>
     </div>
 
     <div class="col-md-12">
-      <p> {{blog_query.content}} </p>
-    </div>
-
-    <div class="col-md-12">
-      <p> Vote Count: {{blog_query.likes}}</p>
+      <h3> {{blog_query.content}} </h3>
     </div>
 
     <div class="col-md-12">
@@ -44,46 +42,77 @@
         </button>
       </a>
 
-    </div>
+      <br>
+      <br>
+      <br>
 
+    </div>
 
   </section>
 
-  <hr>
 
-  <form method="post">
+  <section class="row">
+    <div class="col-md-12">
+      <form method="post">
 
-    <label>
-      <h2> Comment </h2>
-      <textarea name="content"></textarea>
-    </label>
+        <div class="form-group">
+          <label for="content"> Post comment: </label>
+          <textarea name="content" class="form-control" required=true rows="5"></textarea>
+        </div>
 
-    <br>
-    <input type="submit" >
+        <button type="submit" class="btn btn-default"> Submit </button>
 
-  </form>
+      </form>
 
-  <br>
-  <hr>
+      <br>
+
+    </div>
+  </section>
 
 
 
-  <h1> Latest Comments</h1>
-  <hr>
+  <section class="row">
 
-  {% for comment in comments %}
-    <h3> {{comment.author}} Date: {{comment.created}}</h3>
-    <p>
-      {{comment.content}}
-    </p>
-    <br>
-    <p>{{comment.likes}}</p>
+    <div class="col-md-12">
+      <h1> Latest Comments</h1>
+    </div>
+    {% for comment in comments %}
 
-    <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Edit comment? </a>
-    <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}"> Delete comment? </a>
-    <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=1">Upvote!</a>
-    <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=-1">Downvote!</a>
-    <br>
-  {% endfor %}
+      <div class="col-md-12">
 
+        <h4> {{comment.content}}</h3>
+        <p> ---- {{comment.author}}, {{comment.created.strftime('%b %d, %Y')}}, Comment Points: {{comment.likes}} </p>
+
+        <a href="editPost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}">
+          <button type="button" class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-pencil" aria-hidden="true" ></span>
+          </button>
+        </a>
+
+        <a href="deletePost?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}">
+
+          <button type="button" class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true" ></span>
+          </button>
+        </a>
+
+        <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=1">
+          <button type="button" class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true" ></span>
+          </button>
+        </a>
+
+        <a href="vote?blog_post_id={{comment.key.id()}}&parent={{blog_query.key.id()}}&value=-1">
+          <button type="button" class="btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true" ></span>
+          </button>
+        </a>
+
+        <br>
+        <br>
+
+      </div>
+    {% endfor %}
+
+  </section>
 {% endblock %}
