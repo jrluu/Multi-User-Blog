@@ -53,6 +53,7 @@ class Handler(webapp2.RequestHandler):
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
+        params['user'] = self.request.cookies.get("username")
         t = jinja_env.get_template(template)
         return t.render(params)
 

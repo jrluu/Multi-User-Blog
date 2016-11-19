@@ -26,13 +26,35 @@
     			<span class ="icon-bar"> </span>
     	  </button>
 
-    	  <a class = "navbar-brand" href="/"> WELCOME </a>
+    	  <a class = "navbar-brand" href="/"> WELCOME {{user}}</a>
 
     	  <div class ="navbar-collapse collapse">
-      		<ul class ="nav navbar-nav navbar-right">
-    		  	<a class = "navbar-brand" href="/createPost"> Create Post </a>
+
+          {% if user %}
+              <ul class ="nav navbar-nav navbar-right">
+                <a class = "navbar-brand" href="/logout"> Logout </a>
+              </ul>
+              <ul class ="nav navbar-nav navbar-right">
+        		  	<a class = "navbar-brand" href="/createPost"> Create Post </a>
+        			</ul>
+          {% else %}
+            <ul class ="nav navbar-nav navbar-right">
+              <a class = "navbar-brand" href="/signup"> Sign Up </a>
+            </ul>
+            <ul class ="nav navbar-nav navbar-right">
+              <a class = "navbar-brand" href="/login"> Login </a>
+            </ul>
+
+          {% endif %}
+
+          <ul class ="nav navbar-nav navbar-right">
+    		  	<a class = "navbar-brand" href="/"> Browse </a>
     			</ul>
+
       	</div>
+
+
+
 
     	</div>
     </nav>
