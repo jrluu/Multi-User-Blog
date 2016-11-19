@@ -1,7 +1,4 @@
 $ff: 'arial';
-$color1: #02b3e4;
-$color2: #2d3c49;
-$color3: #7d97ad;
 
 $screen-xs-max: 767px;
 $screen-sm-min: 768px;
@@ -26,25 +23,14 @@ $screen-lg-min: 1200px;
   height: 100px;
 }
 
+.footer{
+  margin-top:25px
+
+
+}
 
 hr{
   border: solid 2px;
-
-}
-
-/* Color */
-.color_1{
-  color: $color1;
-
-}
-
-.color_2{
-  color: $color2;
-
-}
-
-.color_3{
-  color: $color3;
 
 }
 

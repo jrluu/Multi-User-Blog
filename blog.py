@@ -209,7 +209,7 @@ class SignUpPage(Handler):
             user= Account(id = username, password=hash_str(password), email = email)
             user.put()
             self.set_secure_cookie(username, password)
-            self.redirect('/welcome')
+            self.redirect('/')
 
 
 #Takes care of users login
@@ -232,7 +232,7 @@ class LoginPage(Handler):
                 if account_query.password:
                     if account_query.password == hash_str(password):
                         self.set_secure_cookie(username,password)
-                        self.redirect('/welcome')
+                        self.redirect('/')
 
         self.render_front(username, password, "Invalid Username or Password")
 

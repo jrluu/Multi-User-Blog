@@ -6,8 +6,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
     <title> Multi User Blog </title>
-    <meta name ="description" content="This page contains information about Jonathan Luu ">
+    <meta name ="description" content="This multi blog projet developed by Jonathan Luu ">
     <link href="/FrontEnd/build/css/production.min.css" rel="stylesheet">
 
     {% block additonal_header %}
@@ -26,7 +27,7 @@
     			<span class ="icon-bar"> </span>
     	  </button>
 
-    	  <a class = "navbar-brand" href="/"> WELCOME {{user}}</a>
+    	  <a class = "navbar-brand" href="/">  {{user}}</a>
 
     	  <div class ="navbar-collapse collapse">
 
@@ -53,9 +54,6 @@
 
       	</div>
 
-
-
-
     	</div>
     </nav>
 
@@ -63,8 +61,20 @@
 
     <div class = "container top">
 
-    {% block content %}
-    {% endblock %}
+      {% block content %}
+      {% endblock %}
+
+
+
+      <!-- FOOTER -->
+      <footer class="row footer">
+        <div class="col-md-12">
+
+          <p class="pull-right"><a href="#">Back to top</a></p>
+          <p>Built with <i class="fa fa-coffee" aria-hidden="true"></i> by Jonathan Luu </p>
+
+        </div>
+      </footer>
 
     </div>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
