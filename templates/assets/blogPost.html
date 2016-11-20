@@ -18,30 +18,31 @@
 
     <div class="col-md-12">
 
-      <a href="editPost?blog_post_id={{blog_query.key.id()}}">
-        <button type="button" class="btn btn-default btn-md">
-          <span class="glyphicon glyphicon-pencil" aria-hidden="true" ></span>
-        </button>
-      </a>
+      {% if user == blog_query.author %}
+        <a href="editPost?blog_post_id={{blog_query.key.id()}}">
+          <button type="button" class="btn btn-default btn-md">
+            <span class="glyphicon glyphicon-pencil" aria-hidden="true" ></span>
+          </button>
+        </a>
 
-      <a href="deletePost?blog_post_id={{blog_query.key.id()}}">
-        <button type="button" class="btn btn-default btn-md">
-          <span class="glyphicon glyphicon-trash" aria-hidden="true" ></span>
-        </button>
-      </a>
+        <a href="deletePost?blog_post_id={{blog_query.key.id()}}">
+          <button type="button" class="btn btn-default btn-md">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true" ></span>
+          </button>
+        </a>
+      {% else %}
+        <a href="vote?blog_post_id={{blog_query.key.id()}}&value=1">
+          <button type="button" class="btn btn-default btn-md">
+            <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true" ></span>
+          </button>
+        </a>
 
-      <a href="vote?blog_post_id={{blog_query.key.id()}}&value=1">
-        <button type="button" class="btn btn-default btn-md">
-          <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true" ></span>
-        </button>
-      </a>
-
-      <a href="vote?blog_post_id={{blog_query.key.id()}}&value=-1">
-        <button type="button" class="btn btn-default btn-md">
-          <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true" ></span>
-        </button>
-      </a>
-
+        <a href="vote?blog_post_id={{blog_query.key.id()}}&value=-1">
+          <button type="button" class="btn btn-default btn-md">
+            <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true" ></span>
+          </button>
+        </a>
+      {% endif %}
       <br>
       <br>
       <br>
