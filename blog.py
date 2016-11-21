@@ -60,12 +60,9 @@ class Handler(webapp2.RequestHandler):
 
         if username:
             account_query = Account.get_by_id(username)
-            if account_query:
-                if account_query.password:
-                    if account_query.password == password:
-                        return True
+            if account_query and account_query.password:
+                    return True if account_query.password == password else False
 
-        return False
 
     def clear_cooke(self):
         """  Clears Cookie """
@@ -73,18 +70,12 @@ class Handler(webapp2.RequestHandler):
         self.response.headers.add_header('Set-Cookie', "username = ")
         self.response.headers.add_header('Set-Cookie', "password = ")
 
-    #Checks input name with stored Cookie's username
-    #NOTE: Should check_cookie first
     def is_owner(self, name):
         """ Checks input name with username stored inside the cookie
             NOTE: User should check_cookie first
         """
         username = self.request.cookies.get("username")
-        if username:
-            if username == name:
-                return True
-
-        return False
+        return True if username == name else False
 
     def render_not_found(self):
         """ Renders a Not Found page """
@@ -97,7 +88,7 @@ class Handler(webapp2.RequestHandler):
         """
         blog_post_id = int(self.request.get('blog_post_id', DEFAULT_POST_ID))
 
-        #Creates a parent query and checks if it exists
+        # Creates a parent query and checks if it exists
         parent_id = int(self.request.get('parent', DEFAULT_POST_ID))
         parent_query = Post.get_by_id(parent_id)
         if parent_query:
@@ -442,11 +433,8 @@ class VotePage(Handler):
     def decide_value(self, value):
         """Method that determines appropriate value"""
         value = int(value)
-        if value >= 1:
-            value = 1
-        else:
-            value = -1
-        return value
+
+        return 1 if value>=1 else -1
 
     def get(self):
         """

@@ -32,13 +32,13 @@
           {% if blog_query.isRoot == True %}
             <div class="form-group">
               <label for="subject"> Subject: </label>
-              <input type="text" class="form-control" name="title" required=true>
+              <input type="text" class="form-control" name="title" required=true value={{blog_query.title}}>
             </div>
           {% endif %}
 
           <div class="form-group">
             <label for="content"> Post Content: </label>
-            <textarea name="content" class="form-control" required=true rows="10"></textarea>
+            <textarea name="content" class="form-control" required=true rows="10">{{blog_query.content}}</textarea>
           </div>
 
           <button type="submit" class="btn btn-default"> Submit </button>
