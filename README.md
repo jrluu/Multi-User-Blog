@@ -2,6 +2,8 @@
 
 ##Description
 
+A live preview of this code is available [here](http://jrluudevs.com)
+
 In this project, I created a website that allows you to register for an account,
  post a blog, comment on blog posts, and upvote/downvote them.
 
