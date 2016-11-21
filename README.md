@@ -13,6 +13,11 @@ You must have the following installed
 * [Google Cloud](https://cloud.google.com/)   
 * [Python 2.7](https://www.python.org/download/releases/2.7/)
 
+##Navigating the directory
+* FrontEnd/assets - Contains the css, js, and sass files  
+* templates/assets - Contains the HTML files
+* ./ - Contains python files, app.yaml, and index.yaml
+
 ##How to run locally
 1. Download the files  
 `$ git clone https://github.com/jrluu/Nanodegree.git `
@@ -28,6 +33,15 @@ You must have the following installed
 `$ gcloud app deploy app.yaml index.yaml`
 3. View it on your local browser  
 `$ gcloud app browse`
+
+
+##How to develop
+1. Install Grunt if you have not already  
+`$ npm install -g grunt-cli`
+2. Install Grunt Plugins  
+`$ npm install`
+3. Type in command to automatically optimize files  
+`$ grunt watch`
 
 ##Possible Errors
 1. NeedIndexError
