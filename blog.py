@@ -1,14 +1,18 @@
-'''
+"""
 This file contains all of the code for blog.
 It contains handlers for all the page and it has the Kind/Collection/Schema
 for the database, ndb
-'''
+"""
 import os
 import hmac
 import urllib
 import webapp2
 import jinja2
 from google.appengine.ext import ndb
+
+from post import Post
+from vote import Vote
+from account import Account
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 JINJA_ENV = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR),
@@ -18,61 +22,39 @@ SECRET = "SamSmith"
 DEFAULT_POST_ID = 1111111111111111
 
 def hash_str(string):
-    '''Returns a string encyrpted by using the HMAC protocol'''
+    """Returns a string encyrpted by using the HMAC protocol"""
     return hmac.new(SECRET, string).hexdigest()
-
-class Account(ndb.Model):
-    '''Kind for Account'''
-    password = ndb.TextProperty(required=True)
-    email = ndb.TextProperty()
-
-
-class Post(ndb.Model):
-    '''Kind for Post'''
-    author = ndb.StringProperty(required=True)
-    title = ndb.StringProperty()
-    content = ndb.TextProperty(required=True)
-    created = ndb.DateTimeProperty(auto_now_add=True)
-    likes = ndb.IntegerProperty(default=0)
-    isRoot = ndb.BooleanProperty(default=False)
-
-
-class Vote(ndb.Model):
-    '''Kind for Vote'''
-    post = ndb.KeyProperty(kind=Post)
-    user_id = ndb.StringProperty(required=True)
-    value = ndb.IntegerProperty(default=0)
 
 
 class Handler(webapp2.RequestHandler):
-    '''
+    """
     Base Handler Class
     Takes care of page rendering, cookies maniupulation, and header
-    '''
+    """
 
     def write(self, *a, **kw):
-        ''' Writes output to client's browser '''
+        """ Writes output to client's browser """
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
-        ''' Renders HTML using template '''
+        """ Renders HTML using template """
         params['user'] = self.request.cookies.get("username")
         t = JINJA_ENV.get_template(template)
         return t.render(params)
 
     def render(self, template, **kw):
-        ''' Calls Above Functions '''
+        """ Calls Above Functions """
         self.write(self.render_str(template, **kw))
 
     def set_secure_cookie(self, name, val):
-        ''' Sets username and password(hashed version) into cookie '''
+        """ Sets username and password(hashed version) into cookie """
         self.response.headers['Content-Type'] = 'text/html'
         cookie_val = str(hash_str(val))
         self.response.headers.add_header('Set-Cookie', 'username = %s' % str(name))
         self.response.headers.add_header('Set-Cookie', 'password = %s' % cookie_val)
 
     def check_cookie(self):
-        '''  Checks cookie username and password against database '''
+        """  Checks cookie username and password against database """
         username = self.request.cookies.get("username")
         password = self.request.cookies.get("password")
 
@@ -86,7 +68,7 @@ class Handler(webapp2.RequestHandler):
         return False
 
     def clear_cooke(self):
-        '''  Clears Cookie '''
+        """  Clears Cookie """
         self.response.headers['Content-Type'] = 'text/html'
         self.response.headers.add_header('Set-Cookie', "username = ")
         self.response.headers.add_header('Set-Cookie', "password = ")
@@ -94,9 +76,9 @@ class Handler(webapp2.RequestHandler):
     #Checks input name with stored Cookie's username
     #NOTE: Should check_cookie first
     def is_owner(self, name):
-        ''' Checks input name with username stored inside the cookie
+        """ Checks input name with username stored inside the cookie
             NOTE: User should check_cookie first
-        '''
+        """
         username = self.request.cookies.get("username")
         if username:
             if username == name:
@@ -105,14 +87,14 @@ class Handler(webapp2.RequestHandler):
         return False
 
     def render_not_found(self):
-        ''' Renders a Not Found page '''
+        """ Renders a Not Found page """
         self.render("notFound.html")
 
     def find_blog_query(self):
-        '''Takes blog_query_id and parent from the header
+        """Takes blog_query_id and parent from the header
             Then looks for it in post.
             If not found, return "None"
-        '''
+        """
         blog_post_id = int(self.request.get('blog_post_id', DEFAULT_POST_ID))
 
         #Creates a parent query and checks if it exists
@@ -128,28 +110,28 @@ class Handler(webapp2.RequestHandler):
 
 
 class InvalidCookiePage(Handler):
-    '''Invalid Cookie Page'''
+    """Invalid Cookie Page"""
     def get(self):
-        '''get request that renders the page '''
+        """get request that renders the page """
         self.render("invalidCookie.html")
 
 
 class FrontPage(Handler):
-    '''Front page that displays the 10 most recent post'''
+    """Front page that displays the 10 most recent post"""
     def render_front(self):
-        '''Renders the 10 most recent post'''
+        """Renders the 10 most recent post"""
         post_query = Post.query(Post.isRoot == True).order(-Post.created).fetch(10)
         self.render("frontPage.html", post_query=post_query)
 
     def get(self):
-        '''get request that calls the render_front function'''
+        """get request that calls the render_front function"""
         self.render_front()
 
 
 class CreatePostPage(Handler):
-    ''' Allows users to post a blog '''
+    """ Allows users to post a blog """
     def render_front(self):
-        '''Method to render sign up page with appropriate values'''
+        """Method to render sign up page with appropriate values"""
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -157,14 +139,14 @@ class CreatePostPage(Handler):
         self.render("post.html")
 
     def get(self):
-        ''' Inital get request '''
+        """ Inital get request """
         self.render_front()
 
     def post(self):
-        '''
+        """
            post request that takes the submitted information and inserts it
            the Post Kind inside the database
-        '''
+        """
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -183,27 +165,27 @@ class CreatePostPage(Handler):
 
 
 class SignUpPage(Handler):
-    '''Page handler that handles user registration'''
+    """Page handler that handles user registration"""
 
     def render_front(self, username="", password="", verifypw="",
                      email="", error_user="", error_pass=""):
-        '''Method to render sign up page with appropriate values'''
+        """Method to render sign up page with appropriate values"""
         self.render("sign_up.html", username=username, password=password,
                     verifypw=verifypw, email=email, error_user=error_user,
                     error_pass=error_pass)
 
     def get(self):
-        '''Initial get request'''
+        """Initial get request"""
         self.render_front()
 
     def post(self):
-        '''
+        """
             Takes in user information, and checks it against the database.
             If valid,
                 create the user
             Else,
                 return to sign up with the old information and appropriate error
-        '''
+        """
         username = self.request.get("username")
         password = self.request.get("password")
         verifypw = self.request.get("verifypw")
@@ -222,10 +204,10 @@ class SignUpPage(Handler):
                 error_pass = "Passwords do not match"
                 redirect = True
         else:
-            '''
+            """
             Taken care of this case with required value in the .html file
             but leaving as redundancy
-            '''
+            """
             redirect = True
             error_user = "Please fill out username and password fields"
             error_pass = ""
@@ -240,24 +222,24 @@ class SignUpPage(Handler):
 
 
 class LoginPage(Handler):
-    '''
+    """
         Handler that handles User login and creates cookies for an
         authenticated user
-    '''
+    """
     def render_front(self, username="", password="", error=""):
-        '''Method to render sign up page with appropriate values'''
+        """Method to render sign up page with appropriate values"""
         self.render("login.html", username=username, password=password, error=error)
 
     def get(self):
-        ''' Inital get method '''
+        """ Inital get method """
         self.render_front()
 
     def post(self):
-        '''
+        """
             post method that checks if the user is valid against the database
             if the user and password match the database,
                 Create a cookie and send user to front page
-        '''
+        """
 
         username = self.request.get("username")
         password = self.request.get("password")
@@ -275,23 +257,23 @@ class LoginPage(Handler):
 
 
 class LogoutPage(Handler):
-    '''
+    """
     Takes care of user logout by clearing cookie
-    '''
+    """
     def get(self):
-        '''Clears cookie and redirects page'''
+        """Clears cookie and redirects page"""
         self.clear_cooke()
         self.redirect('signup')
 
 
 class WelcomePage(Handler):
-    '''
+    """
     CURRENTLY UNUSED...PENDING REMOVAL....
     When users login or sign up, this page welcomes then and then redirects them
     Redirection is handled in the meta tag in welcome.html
-    '''
+    """
     def render_front(self):
-        '''Method to render sign up page with appropriate values'''
+        """Method to render sign up page with appropriate values"""
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -300,24 +282,24 @@ class WelcomePage(Handler):
         self.render("welcome.html", username=username)
 
     def get(self):
-        '''get request '''
+        """get request """
         self.render_front()
 
 
 class BlogPostPage(Handler):
-    '''Handles the individaul page for the Blog Post'''
+    """Handles the individaul page for the Blog Post"""
 
     def render_front(self, blog_query="", comments=""):
-        '''Displays the blog post and the comments associated with the post'''
+        """Displays the blog post and the comments associated with the post"""
 
-        '''Query that searches in Post for attributees isRoot and ancestor'''
+        """Query that searches in Post for attributees isRoot and ancestor"""
         comments_query = Post.query(Post.isRoot == False,
                                     ancestor=blog_query.key).order(-Post.created)
         comments = comments_query.fetch(10)
         self.render("blogPost.html", blog_query=blog_query, comments=comments)
 
     def get(self):
-        ''' Initial get request '''
+        """ Initial get request """
         blog_post_id = int(self.request.get('blog_post_id', DEFAULT_POST_ID))
         blog_query = Post.get_by_id(blog_post_id)
 
@@ -327,7 +309,7 @@ class BlogPostPage(Handler):
             self.render_not_found()
 
     def post(self):
-        '''Grabs comment information and associates it with the blog post'''
+        """Grabs comment information and associates it with the blog post"""
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -338,7 +320,7 @@ class BlogPostPage(Handler):
         blog_post_id = int(self.request.get('blog_post_id', DEFAULT_POST_ID))
         blog_query = Post.get_by_id(blog_post_id)
 
-        '''Create Post child(this is a comment) on blog_query'''
+        """Create Post child(this is a comment) on blog_query"""
         post_key = Post(parent=blog_query.key, author=username, content=content)
         post_key.put()
 
@@ -346,14 +328,14 @@ class BlogPostPage(Handler):
 
 
 class EditPostPage(Handler):
-    ''' Handler that modifies blog post or comments '''
+    """ Handler that modifies blog post or comments """
 
     def render_front(self, blog_query="", error=""):
-        '''Method to render EditPost page'''
+        """Method to render EditPost page"""
         self.render("editPost.html", blog_query=blog_query, error=error)
 
     def redirect_to_post(self, blog_query):
-        '''Method to redirect website to a blog post'''
+        """Method to redirect website to a blog post"""
         parent_id = self.request.get("parent")
 
         if parent_id:
@@ -364,10 +346,10 @@ class EditPostPage(Handler):
         self.redirect('/blogPost?' + urllib.urlencode(query_params))
 
     def get(self):
-        '''
+        """
             Get method that checks if user CAN edit the page
             and if so, renders form to do so
-        '''
+        """
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -383,7 +365,7 @@ class EditPostPage(Handler):
             self.render_not_found()
 
     def post(self):
-        '''Checks if user owns post, and if so, updates the post'''
+        """Checks if user owns post, and if so, updates the post"""
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -405,14 +387,14 @@ class EditPostPage(Handler):
 
 
 class DeletePostPage(Handler):
-    ''' Handler that allows user to delete post '''
+    """ Handler that allows user to delete post """
 
     def render_front(self, blog_query="", error=""):
-        '''Method that renders DeletePostPage'''
+        """Method that renders DeletePostPage"""
         self.render("deletePost.html", blog_query=blog_query, error=error)
 
     def get(self):
-        '''Method that finds the appropriate blog and renders it'''
+        """Method that finds the appropriate blog and renders it"""
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -428,13 +410,13 @@ class DeletePostPage(Handler):
             self.render_not_found()
 
     def post(self):
-        '''
+        """
             Checks to see if user wants to delete post.
             If response is yes,
                 delete the page
             Otherwise,
                 Redirect to old page
-        '''
+        """
         if not self.check_cookie():
             self.redirect('/invalidCookie')
             return
@@ -455,10 +437,10 @@ class DeletePostPage(Handler):
 
 
 class VotePage(Handler):
-    '''Handler that creates or updates Vote entities'''
+    """Handler that creates or updates Vote entities"""
 
     def decide_value(self, value):
-        '''Method that determines appropriate value'''
+        """Method that determines appropriate value"""
         value = int(value)
         if value >= 1:
             value = 1
@@ -467,13 +449,13 @@ class VotePage(Handler):
         return value
 
     def get(self):
-        '''
+        """
             Get request(not really, it's a hack) to allow users to vote
             This method creates a Vote entity if the user has not previous voted
             on a post or comment
             If the user has already voted, this method updates the Vote entity
             already in the database
-        '''
+        """
 
         if not self.check_cookie():
             self.redirect('/invalidCookie')
